@@ -5,6 +5,7 @@ from difflib import get_close_matches
 
 # ----------------- File Path -----------------
 file_path = os.path.join(os.getcwd(),'cust_stock.json')
+st.set_page_config(layout="wide")
 
 @st.cache_data
 if not os.path.exists(file_path):
@@ -13,7 +14,7 @@ if not os.path.exists(file_path):
 
 with open(file_path, 'r') as file:
     data = json.load(file)
-st.set_page_config(layout="wide")
+
 # ----------------- Load JSON Data -----------------
 
 
