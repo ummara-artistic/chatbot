@@ -7,7 +7,9 @@ from groq import Groq
 
 # ----------------- Load Env & JSON -----------------
 load_dotenv()
-GROQ_API_KEY = os.getenv('GROQ_API_KEY')
+import streamlit as st
+GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
+
 
 file_path = os.path.join(os.getcwd(),'cust_stock.json')
 if not os.path.exists(file_path):
