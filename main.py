@@ -7,7 +7,7 @@ from difflib import get_close_matches
 file_path = os.path.join(os.getcwd(),'cust_stock.json')
 st.set_page_config(layout="wide")
 
-@st.cache_data
+
 if not os.path.exists(file_path):
     st.error("❌ JSON file not found!")
     st.stop()
