@@ -3,15 +3,12 @@ import json
 import re
 from difflib import get_close_matches
 import os
-
 # ----------------- File Path -----------------
 file_path = os.path.join(os.getcwd(),'cust_stock.json')
 if not os.path.exists(file_path):
     st.error("❌ JSON file not found!")
     st.stop()
 
-with open(file_path, 'r') as file:
-    data = json.load(file)
 st.set_page_config(layout="wide")
 # ----------------- Load JSON Data -----------------
 @st.cache_data
@@ -100,7 +97,7 @@ st.sidebar.title("💬 Chat History")
 for idx, hist in enumerate(st.session_state.chat_history):
     st.sidebar.write(f"{idx+1}. {hist['query']}")
 
-st.title("📦 Stock Inventory Chatbot ")
+st.title("📦 Stock Inventory Chatbot (GPT-Style)")
 st.write("---")
 
 for hist in st.session_state.chat_history:
