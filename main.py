@@ -9,7 +9,7 @@ from groq import Groq
 load_dotenv()
 GROQ_API_KEY = os.getenv('GROQ_API_KEY')
 
-file_path = r'D:\stock_chatbot\cust_stock.json'
+file_path = os.path.join(os.getcwd(),'cust_stock.json')
 if not os.path.exists(file_path):
     st.error("❌ JSON file not found!")
     st.stop()
