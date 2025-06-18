@@ -4,7 +4,13 @@ import re
 from difflib import get_close_matches
 
 # ----------------- File Path -----------------
-file_path = r'D:\stock_chatbot\cust_stock.json'
+file_path = os.path.join(os.getcwd(),'cust_stock.json')
+if not os.path.exists(file_path):
+    st.error("❌ JSON file not found!")
+    st.stop()
+
+with open(file_path, 'r') as file:
+    data = json.load(file)
 st.set_page_config(layout="wide")
 # ----------------- Load JSON Data -----------------
 @st.cache_data
