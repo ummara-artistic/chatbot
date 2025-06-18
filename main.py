@@ -10,6 +10,58 @@ load_dotenv()
 import streamlit as st
 GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
 
+# ------------------- PAGE CONFIG -------------------
+st.set_page_config(page_title="🎨 Inventory Chatbor", layout="wide")
+
+
+
+
+# ------------------- CUSTOM CSS -------------------
+st.markdown("""
+<style>
+[data-testid="stSidebar"] {
+    background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+    color: white;
+}
+[data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3, [data-testid="stSidebar"] label, [data-testid="stSidebar"] div {
+    color: white !important;
+}
+.css-1d391kg input[type="radio"]:checked + div {
+    background: #ff7e5f !important;
+    color: white !important;
+    border-radius: 8px;
+    font-weight: 700;
+}
+.css-1d391kg div[role="radio"]:hover {
+    background-color: rgba(255, 126, 95, 0.3);
+    border-radius: 8px;
+}
+.metric-container {
+    background-color: white; 
+    border-radius: 10px; 
+    padding: 20px; 
+    box-shadow: 0 0 10px rgb(0 0 0 / 0.1);
+    margin-bottom: 15px;
+}
+h2, h3 {
+    color: #2575fc;
+}
+footer {
+    text-align: center;
+    color: #999;
+    padding: 10px;
+}
+header {visibility: hidden;}
+</style>
+""", unsafe_allow_html=True)
+
+
+
+
+
+
+# ------------------- HEADER -------------------
+
 
 file_path = os.path.join(os.getcwd(),'cust_stock.json')
 if not os.path.exists(file_path):
