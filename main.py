@@ -1,149 +1,140 @@
 import streamlit as st
 import json
-import os
-import random
-from dotenv import load_dotenv
-from groq import Groq
+import re
+from difflib import get_close_matches
 
-# ----------------- Load Env & JSON -----------------
-load_dotenv()
-import streamlit as st
-GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
+# ----------------- File Path -----------------
+file_path = r'D:\stock_chatbot\cust_stock.json'
+st.set_page_config(layout="wide")
+# ----------------- Load JSON Data -----------------
+@st.cache_data
+def load_data(path):
+    with open(path, 'r') as file:
+        data = json.load(file)
+    return data['items']
 
-# ------------------- PAGE CONFIG -------------------
-st.set_page_config(page_title="🎨 Inventory Chatbor", layout="wide")
+data = load_data(file_path)
+
+# ----------------- NLP Functions -----------------
+def preprocess(text):
+    text = text.lower()
+    text = re.sub(r'[^a-z0-9\s]', '', text)
+    return text.split()
+
+def fuzzy_token_match(query_tokens, item_tokens):
+    score = 0
+    for q_token in query_tokens:
+        match = get_close_matches(q_token, item_tokens, n=1, cutoff=0.7)
+        if match:
+            score += 1
+    return score
+
+def search_all_matching_items(query, data, min_score=1):
+    query_tokens = preprocess(query)
+    matched_items = []
+
+    for item in data:
+        combined_text = f"{item.get('description', '')} {item.get('major', '')} {item.get('fabtype', '')}"
+        item_tokens = preprocess(combined_text)
+
+        score = fuzzy_token_match(query_tokens, item_tokens)
+        if score >= min_score:
+            matched_items.append((item, score))
+
+    matched_items.sort(key=lambda x: x[1], reverse=True)
+    return matched_items
+
+def detect_requested_fields(query):
+    possible_fields = {
+        "inventory id": "inventory_item_id",
+        "description": "description",
+        "major": "major",
+        "fab type": "fabtype",
+        "qty": "qty",
+        "quantity": "qty",
+        "stock value": "stockvalue",
+        "aging": ["aging_60", "aging_90", "aging_180", "aging_180plus"]
+    }
+    detected = []
+
+    for key, val in possible_fields.items():
+        if key in query.lower():
+            detected.append(val)
+    return detected
+
+def format_gpt_style_response(item, requested_fields):
+    response = "Here are the details:\n\n"
+
+    if requested_fields:
+        for field in requested_fields:
+            if isinstance(field, list):
+                response += "**Aging Info:**\n"
+                for subfield in field:
+                    response += f"- {subfield.replace('_', ' ').title()}: {item.get(subfield, 'N/A')}\n"
+            else:
+                response += f"- **{field.replace('_', ' ').title()}**: {item.get(field, 'N/A')}\n"
+    else:
+        response += f"- **Inventory ID**: {item.get('inventory_item_id', 'N/A')}\n"
+        response += f"- **Description**: {item.get('description', 'N/A')}\n"
+        response += f"- **Major**: {item.get('major', 'N/A')}\n"
+        response += f"- **Fab Type**: {item.get('fabtype', 'N/A')}\n"
+        response += f"- **Qty**: {item.get('qty', 'N/A')}\n"
+        response += f"- **Stock Value**: {item.get('stockvalue', 'N/A')}\n"
+
+    return response
+
+# ----------------- Streamlit Frontend -----------------
 
 
-
-# ------------------- CUSTOM CSS -------------------
-st.markdown("""
-<style>
-[data-testid="stSidebar"] {
-    background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
-    color: white;
-}
-[data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3, [data-testid="stSidebar"] label, [data-testid="stSidebar"] div {
-    color: white !important;
-}
-.css-1d391kg input[type="radio"]:checked + div {
-    background: #ff7e5f !important;
-    color: white !important;
-    border-radius: 8px;
-    font-weight: 700;
-}
-.css-1d391kg div[role="radio"]:hover {
-    background-color: rgba(255, 126, 95, 0.3);
-    border-radius: 8px;
-}
-.metric-container {
-    background-color: white; 
-    border-radius: 10px; 
-    padding: 20px; 
-    box-shadow: 0 0 10px rgb(0 0 0 / 0.1);
-    margin-bottom: 15px;
-}
-h2, h3 {
-    color: #2575fc;
-}
-footer {
-    text-align: center;
-    color: #999;
-    padding: 10px;
-}
-header {visibility: hidden;}
-</style>
-""", unsafe_allow_html=True)
-
-
-
-
-
-
-# ------------------- HEADER -------------------
-
-
-file_path = os.path.join(os.getcwd(),'cust_stock.json')
-if not os.path.exists(file_path):
-    st.error("❌ JSON file not found!")
-    st.stop()
-
-with open(file_path, 'r') as file:
-    data = json.load(file)
-
-# ----------------- Groq Setup -----------------
-def groq_response(query, json_data):
-    try:
-        client = Groq(api_key=GROQ_API_KEY)
-
-        all_items = json_data.get('items', [])
-
-        # Randomly pick up to 100 unique items
-        sampled_items = random.sample(all_items, min(len(all_items), 100))
-
-        json_text = json.dumps(sampled_items, indent=2)
-
-        system_prompt = f"""
-You are an Inventory Assistant.
-
-Using ONLY this JSON data:
-
-{json_text}
-
-Rules:
-1. When the user asks about any stock, description, quantity, inventory ID, or similar, search the 'description' field and other relevant fields. If i give what is sulphur olive green like give description name, should give reponse by checking descriptions
-2. Support user typos, misspellings, plurals, slang.
-3. Return matching items in the following format — one item at a time — each field on a SEPARATE line, like this:
-
-Example response:
-Sure! Here are the matching inventory items I found:
-
-• Inventory Item ID: 1234  
-• Description: Bleach White  
-• Quantity: 200  
-• Stock Value: 5000  
-• secqty: 50  
-
-(Repeat for each matching item — max 50 items)
-
-4. If no match is found, reply: "⚠️ No matching records found."
-
-5. Do not guess or make up data.
-
-Strictly follow this output format.
-"""
-
-        completion = client.chat.completions.create(
-            model="meta-llama/llama-4-scout-17b-16e-instruct",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": query}
-            ],
-            temperature=0.2,
-            max_completion_tokens=2048,
-            top_p=1,
-            stream=False,
-        )
-        return completion.choices[0].message.content
-
-    except Exception as e:
-        return f"❌ Groq API Error: {e}"
-
-# ----------------- Streamlit Chat UI -----------------
-st.set_page_config(page_title="📦 JSON-Groq StockBot", layout="centered")
-st.title("🤖 Inventory Chatbot (Randomized with Groq + JSON)")
-
-if "chat_history" not in st.session_state:
+if 'chat_history' not in st.session_state:
     st.session_state.chat_history = []
 
-user_input = st.chat_input("Ask about inventory...")
+st.sidebar.title("💬 Chat History")
+for idx, hist in enumerate(st.session_state.chat_history):
+    st.sidebar.write(f"{idx+1}. {hist['query']}")
+
+st.title("📦 Stock Inventory Chatbot (GPT-Style)")
+st.write("---")
+
+for hist in st.session_state.chat_history:
+    st.markdown(f"**You:** {hist['query']}")
+    st.markdown(hist['response'])
+
+user_input = st.text_input("Ask about any inventory item:")
 
 if user_input:
-    st.session_state.chat_history.append({"role": "user", "content": user_input})
-    reply = groq_response(user_input, data)
-    st.session_state.chat_history.append({"role": "assistant", "content": reply})
+    matched_results = search_all_matching_items(user_input, data)
+    requested_fields = detect_requested_fields(user_input)
 
-for chat in st.session_state.chat_history:
-    if chat["role"] == "user":
-        st.chat_message("user").markdown(chat["content"])
+    if matched_results:
+        items_per_page = 10
+        total_pages = len(matched_results) // items_per_page + (1 if len(matched_results) % items_per_page > 0 else 0)
+        page = st.session_state.get('page', 1)
+
+        
+
+        st.session_state.page = page
+
+        start_idx = (page - 1) * items_per_page
+        end_idx = start_idx + items_per_page
+        page_items = matched_results[start_idx:end_idx]
+
+        full_response = ""
+        for item, _ in page_items:
+            full_response += format_gpt_style_response(item, requested_fields) + "\n"
+
+        st.markdown(full_response)
+        page_nums = ' '.join([f"{i+1}" for i in range(total_pages)])
+        col1, col2, col3 = st.columns([1,2,1])
+
+        with col1:
+            if st.button('⬅️ Prev') and page > 1:
+                page -= 1
+
+        with col3:
+            if st.button('Next ➡️') and page < total_pages:
+                page += 1
+
+        st.session_state.chat_history.append({"query": user_input, "response": full_response})
     else:
-        st.chat_message("assistant").markdown(chat["content"])
+        st.error("❌ No matching items found.")
