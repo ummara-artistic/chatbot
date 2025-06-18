@@ -14,7 +14,7 @@ GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
 st.set_page_config(page_title="🎨 Inventory Chatbor", layout="wide")
 
 
-
+st.sidebar("")
 
 # ------------------- CUSTOM CSS -------------------
 st.markdown("""
