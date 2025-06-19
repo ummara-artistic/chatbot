@@ -269,12 +269,53 @@ def handle_input():
     stock_value = sum(float(item.get('stockvalue', 0)) for item in data if item.get('stockvalue'))
 
     # --- Keyword Buckets ---
-    stock_value_keywords = ["stock value", "inventory value", "total stock value"]
-    stock_count_keywords = ["stock count", "inventory count", "total items", "how many items", "items count", "number of items"]
-    top_items_keywords = ["top items", "top 5", "best items", "most used items"]
+    stock_value_keywords = [
+    "stock value", "stock val", "stockval", "stok value", "stck value", "inventory value", "invntory value", "inv value", "stock worth",
+    "inventory worth", "worth of stock", "inventory money", "stock money", "stok mony", "total stock value", "total value", "tot value", "inv value",
+    "stck val", "Stock Value", "STOCK VALUE", "inv val", "inven val", "value of stock", "cost of stock", "stck worth", "whats my stock worth",
+    "valuation", "stock valuation", "inventory valuation", "stockprice", "stock price", "inventoryprice", "inventory price", "stock price value",
+    "stock money value", "total inven value", "invntry value", "stockworth", "what stock worth", "stock rate", "inventory rate", "stok rate", "inv rate",
+    "rate of stock", "inventory rate value", "asset value", "inventory asset value", "stock asset value", "total asset", "stock total value",
+    "inventory total value", "stok total val", "stock total worth", "inventory total worth", "stok total worth", "stock price list", "inventory price list",
+    "inven price", "list of inventory price", "inventory listing value", "stock listing value", "stock net value", "inventory net value", "net stock worth",
+    "net inven worth", "stock gross value", "inventory gross value", "gross stock worth", "gross inven worth", "market value", "stock market value",
+    "inv market value", "market stock worth", "market inven worth", "valuation stock", "valuation inventory", "worth stock", "worth inven", "stock total money",
+    "inventory total money", "stock funds", "inventory funds", "inventory financials", "stock financials", "stock mony", "inven mony", "valuation mony",
+    "val mony", "asset mony", "valuation fund", "invntry funds", "invntry mony", "stockfund", "inventoryfund", "stockfunds", "inventoryfunds", "stock price check",
+    "inventory price check"
+]
+
+    stock_count_keywords = [
+    "stock count", "stk count", "inventory count", "inv count", "total items", "total itm", "tot items", "how many items", "hw many items",
+    "items count", "item count", "itm count", "number of items", "no of items", "how many itms", "items quantity", "items qty", "total qty",
+    "inventory qty", "stock qty", "no. of items", "no items", "stock number", "inventory number", "num of stock", "number stock", "item stock count",
+    "stock item count", "inv item count", "inv stock count", "how many stk", "stk itm count", "items total", "total inv items", "inv total items",
+    "total stock items", "total inv stock", "inv stock itm", "count of items", "item counts", "itemscounts", "itmcounts", "stockcounts", "stock counts",
+    "inv counts", "inventory counts", "total itm count", "how much items", "how mch items", "quantity of items", "qty items", "item qty", "inventoryqty",
+    "stockqty", "totalstockcount", "invstockcount", "itmstockcount", "itmstockqty", "inventoryquantity", "stockquantity", "qtyofstock", "totalnumofitems",
+    "totalnumberofitems", "stockitemqty", "invitemqty", "stockitmqty", "inventoryitmqty", "stock itms count", "inv itms count", "how many stock",
+    "how many inventory", "stocknum", "inventorynum", "numstock", "numinventory", "totinvitems", "invqty", "stkqty", "stknum", "stkitmnum", "itmnum",
+    "itmqty", "itmval", "totalitmqty", "inventoryitmcount", "stockitmcount", "itmcount", "countstock", "countinventory", "inventoryitm", "stockitm",
+    "howmanyitms", "howmanystk", "howmanyinventory", "numitms", "numstk", "totalitms", "stkcount", "invcount", "itmcounts"
+]
+
+    top_items_keywords = [
+    "top items", "top itm", "top 5", "top five", "top5", "best items", "bset items", "top 10", "top ten", "top 3", "top three", "most used items",
+    "mostused items", "top-used items", "frequent items", "frequently used items", "most popular items", "popular items", "hot items", "best selling items",
+    "hot selling items", "most common items", "trending items", "trend items", "best in stock", "top in stock", "most in stock", "highest stock",
+    "top rated items", "top ranking items", "top ranking", "best ranking", "most selling", "top products", "top prod", "best products", "most used products",
+    "top performing items", "high demand items", "top demanded", "high sale items", "top sale", "top sales", "top sale items", "high in demand",
+    "fast selling", "fast moving items", "fast move items", "bestsellers", "top sellers", "best sellers", "best-selling", "most wanted items",
+    "most searched items", "top search items", "frequently bought items", "fast buy items", "quick sale items", "hotstock", "topstock", "toplisting",
+    "hotlisting", "top stocks", "in-demand items", "top preferred", "fav items", "favorite items", "top fav", "top preference", "preferred items",
+    "faststock", "trendy items", "trendstock", "trenditems", "most required", "best picks", "hot picks", "most liked items", "liked items", "loved items",
+    "most chosen", "chosen items", "chosenstock", "hit items", "top hit", "hottest items", "topfivestock", "topfivethings", "bestinlist", "mostpurchased",
+    "most bought items", "popularstock", "popstock", "topselling", "mostpurchaseditems", "mostbuy", "top10stock", "mostdemanded"
+]
+
     category_keywords = ["category", "major", "all majors", "types of items", "item types"]
-    chemical_keywords = ["chemical", "chemicals", "chemical items"]
-    bleach_keywords = ["bleach", "bleaching agents"]
+    chemical_keywords = ["chemical", "chemicals", "chemical items","checmi","Chem","Chechi"]
+    bleach_keywords = ["bleach", "bleaching agents","bleech","bleech list","bleach listing"]
     fabric_keywords = ["fabric", "fabrics", "fabric types", "textiles", "cloth types"]
     costing_keywords = ["costing", "cost", "amount", "total cost", "high cost", "high costing", "expensive item", "pricey item"]
     top_costing_keywords = ["top cost", "top costing", "top 5 cost", "top 5 costing", "high costing items", "expensive items", "top expensive", "high stock value", "high amount"]
@@ -373,7 +414,7 @@ def handle_input():
         full_response = f"🧼 There are {count} bleach-related items in the inventory.\n\n"
         if count > 0:
             full_response += "Here are some examples:\n\n"
-            for idx, item in enumerate(bleach_items[:5], start=1):
+            for idx, item in enumerate(bleach_items[:10], start=1):
                 desc = item.get('description', 'Unknown')
                 stock_val = item.get('stockvalue', '0')
                 qty = item.get('qty', '0')
@@ -408,9 +449,6 @@ def handle_input():
     # Append to chat history
     st.session_state.chat_history.append({"query": user_input, "response": full_response})
     st.session_state.user_input = ""  # clear input
-
-
-
 
 
 
