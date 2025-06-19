@@ -277,11 +277,18 @@ def handle_input():
     full_response = None  # default response
 
     # ----- Local Handling -----
+    # ----- Local Handling -----
     if any(keyword in user_input_lower for keyword in stock_count_keywords):
         full_response = f"📦 There are currently **{total_items} items** in the inventory, covering various categories such as chemicals, fabrics, and more."
 
     elif any(keyword in user_input_lower for keyword in stock_value_keywords):
         full_response = f"💰 The total value of the entire inventory is **{stock_value}**, representing the combined worth of all items in stock."
+
+
+
+
+
+
 
     elif any(keyword in user_input_lower for keyword in top_costing_keywords):
         costly_items = sorted(
