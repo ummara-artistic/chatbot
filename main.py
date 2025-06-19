@@ -178,6 +178,8 @@ Sure! Here are the matching inventory items I found:
 
 • Olive Green Dye with a quantity of 80, stock value 2000, and secqty 10.
 
+If ask for bleech list or kind of any listing show 10 records
+
 (Up to 50 results like this.)
 
 If no match:
@@ -250,7 +252,6 @@ Do not guess, assume, or fabricate any data not explicitly present. Only respond
 
     except Exception as e:
         return f"❌ Groq API Error: {e}"
-
 
 
 
