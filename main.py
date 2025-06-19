@@ -263,6 +263,10 @@ def handle_input():
 
     user_input_lower = user_input.lower()
 
+    # === Calculated Variables ===
+    total_items = len(data)
+    stock_value = sum(float(item.get('stockvalue', 0)) for item in data if item.get('stockvalue'))
+
     # --- Keyword Buckets ---
     stock_value_keywords = ["stock value", "inventory value", "total stock value"]
     stock_count_keywords = ["stock count", "inventory count", "total items", "how many items", "items count", "number of items"]
@@ -273,52 +277,81 @@ def handle_input():
     fabric_keywords = ["fabric", "fabrics", "fabric types", "textiles", "cloth types"]
     costing_keywords = ["costing", "cost", "amount", "total cost", "high cost", "high costing", "expensive item", "pricey item"]
     top_costing_keywords = ["top cost", "top costing", "top 5 cost", "top 5 costing", "high costing items", "expensive items", "top expensive", "high stock value", "high amount"]
+    dye_keywords = ["dye", "dyes"]
 
     full_response = None  # default response
 
-    # ----- Local Handling -----
-    # ----- Local Handling -----
-    if any(keyword in user_input_lower for keyword in stock_count_keywords):
-        full_response = f"📦 There are currently **{total_items} items** in the inventory, covering various categories such as chemicals, fabrics, and more."
+    # ----- Specific handling for Chemicals only -----
+    if any(keyword in user_input_lower for keyword in chemical_keywords) and not any(keyword in user_input_lower for keyword in dye_keywords):
+        chemical_items = [item for item in data if 'chemical' in item.get('major', '').lower() or 'chemical' in item.get('description', '').lower()]
+
+        if chemical_items:
+            top_chemical = max(chemical_items, key=lambda x: float(x.get('stockvalue', 0)))
+            desc = top_chemical.get('description', 'Unknown')
+            stock_val = top_chemical.get('stockvalue', '0')
+            qty = top_chemical.get('qty', '0')
+            major = top_chemical.get('major', 'Unknown')
+
+            full_response = (
+                f"🧪 The highest stock value chemical is {desc} with a stock value of {stock_val}, "
+                f"quantity {qty}, categorized under {major}."
+            )
+        else:
+            full_response = "❌ No chemical items found."
+
+    # ----- Specific handling for Dyes only -----
+    elif any(keyword in user_input_lower for keyword in dye_keywords) and not any(keyword in user_input_lower for keyword in chemical_keywords):
+        dye_items = [item for item in data if 'dye' in item.get('major', '').lower() or 'dye' in item.get('description', '').lower()]
+
+        if dye_items:
+            top_dye = max(dye_items, key=lambda x: float(x.get('stockvalue', 0)))
+            desc = top_dye.get('description', 'Unknown')
+            stock_val = top_dye.get('stockvalue', '0')
+            qty = top_dye.get('qty', '0')
+            major = top_dye.get('major', 'Unknown')
+
+            full_response = (
+                f"🎨 The highest stock value dye is {desc} with a stock value of {stock_val}, "
+                f"quantity {qty}, categorized under {major}."
+            )
+        else:
+            full_response = "❌ No dye items found."
+
+    # ----- Other Existing Handlers -----
+    elif any(keyword in user_input_lower for keyword in stock_count_keywords):
+        full_response = f"📦 There are currently **{total_items} items** in the inventory."
 
     elif any(keyword in user_input_lower for keyword in stock_value_keywords):
-        full_response = f"💰 The total value of the entire inventory is **{stock_value}**, representing the combined worth of all items in stock."
-
-
-
-
-
-
+        full_response = f"💰 The total value of the entire inventory is **{stock_value}**."
 
     elif any(keyword in user_input_lower for keyword in top_costing_keywords):
         costly_items = sorted(
             [item for item in data if item.get('stockvalue')],
             key=lambda x: float(x.get('stockvalue', 0)), reverse=True
         )[:5]
-
         if costly_items:
-            full_response = "🏆 Here are the top 5 most expensive items in the inventory:\n\n"
+            full_response = "🏆 Top 5 expensive items:\n\n"
             for idx, item in enumerate(costly_items, start=1):
                 desc = item.get('description', 'Unknown')
-                stock_value = item.get('stockvalue', '0')
+                stock_val = item.get('stockvalue', '0')
                 qty = item.get('qty', '0')
                 major = item.get('major', 'Unknown')
                 full_response += (
-                    f"{idx}. {desc} has a stock value of {stock_value}, quantity of {qty}, and belongs to the {major} category.\n"
+                    f"{idx}. {desc} has stock value {stock_val}, quantity {qty}, category {major}.\n"
                 )
         else:
-            full_response = "❌ No costing data available in the inventory."
+            full_response = "❌ No costly items found."
 
     elif any(keyword in user_input_lower for keyword in costing_keywords):
         costly_items = [item for item in data if item.get('stockvalue')]
         if costly_items:
             highest = max(costly_items, key=lambda x: float(x.get('stockvalue', 0)))
             desc = highest.get('description', 'Unknown')
-            stock_value = highest.get('stockvalue', '0')
+            stock_val = highest.get('stockvalue', '0')
             qty = highest.get('qty', '0')
             major = highest.get('major', 'Unknown')
             full_response = (
-                f"💎 The most expensive item is {desc} with a stock value of {stock_value}, quantity {qty}, categorized under {major}."
+                f"💎 The most expensive item is {desc} with a stock value of {stock_val}, quantity {qty}, categorized under {major}."
             )
         else:
             full_response = "❌ No costing data found."
@@ -333,23 +366,6 @@ def handle_input():
         for major, count in major_counts.items():
             full_response += f"- {major} with {count} items.\n"
 
-    elif any(keyword in user_input_lower for keyword in chemical_keywords):
-        chemical_items = [item for item in data if 'chemical' in item.get('major', '').lower() or 'chemical' in item.get('description', '').lower()]
-        count = len(chemical_items)
-        full_response = f"🧪 There are {count} chemical-related items in the inventory.\n\n"
-        if count > 0:
-            full_response += "Here are some examples:\n\n"
-            for idx, item in enumerate(chemical_items[:5], start=1):
-                desc = item.get('description', 'Unknown')
-                stock_value = item.get('stockvalue', '0')
-                qty = item.get('qty', '0')
-                major = item.get('major', 'Unknown')
-                full_response += (
-                    f"{idx}. {desc} has a stock value of {stock_value}, quantity {qty}, and falls under the {major} category.\n"
-                )
-        else:
-            full_response += "No chemical items found."
-
     elif any(keyword in user_input_lower for keyword in bleach_keywords):
         bleach_items = [item for item in data if 'bleach' in item.get('description', '').lower()]
         count = len(bleach_items)
@@ -358,11 +374,11 @@ def handle_input():
             full_response += "Here are some examples:\n\n"
             for idx, item in enumerate(bleach_items[:5], start=1):
                 desc = item.get('description', 'Unknown')
-                stock_value = item.get('stockvalue', '0')
+                stock_val = item.get('stockvalue', '0')
                 qty = item.get('qty', '0')
                 major = item.get('major', 'Unknown')
                 full_response += (
-                    f"{idx}. {desc} has a stock value of {stock_value}, quantity {qty}, and belongs to the {major} category.\n"
+                    f"{idx}. {desc} has stock value {stock_val}, quantity {qty}, category {major}.\n"
                 )
         else:
             full_response += "No bleach items found."
@@ -375,22 +391,23 @@ def handle_input():
             full_response += "Here are some examples:\n\n"
             for idx, item in enumerate(fabric_items[:5], start=1):
                 desc = item.get('description', 'Unknown')
-                stock_value = item.get('stockvalue', '0')
+                stock_val = item.get('stockvalue', '0')
                 qty = item.get('qty', '0')
                 major = item.get('major', 'Unknown')
                 full_response += (
-                    f"{idx}. {desc} has a stock value of {stock_value}, quantity {qty}, and falls under the {major} category.\n"
+                    f"{idx}. {desc} has stock value {stock_val}, quantity {qty}, category {major}.\n"
                 )
         else:
             full_response += "No fabric items found."
 
     else:
-        # If no local match, call Groq API as fallback
+        # Fallback: Call Groq API
         full_response = groq_response(user_input, {"items": data})
 
     # Append to chat history
     st.session_state.chat_history.append({"query": user_input, "response": full_response})
     st.session_state.user_input = ""  # clear input
+
 
 
 
