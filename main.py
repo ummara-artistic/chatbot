@@ -234,11 +234,6 @@ Bleach White with a quantity of 200, stock value 5000, and secqty 50.
 Do not guess, assume, or fabricate any data not explicitly present. Only respond based on the above instructions.
 """
 
-If no match is found, reply strictly with:
-
-⚠️ No matching records found.
-Do not guess, assume, or fabricate any data not explicitly present. Only respond based on the above instructions.
-"""
 
         completion = client.chat.completions.create(
             model="meta-llama/llama-4-scout-17b-16e-instruct",
@@ -255,6 +250,8 @@ Do not guess, assume, or fabricate any data not explicitly present. Only respond
 
     except Exception as e:
         return f"❌ Groq API Error: {e}"
+
+
 
 
 
