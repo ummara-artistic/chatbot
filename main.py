@@ -236,6 +236,9 @@ def handle_input():
     costing_keywords = ["costing", "cost", "amount", "total cost", "high cost", "high costing", "expensive item", "pricey item"]
     top_costing_keywords = ["top cost", "top costing", "top 5 cost", "top 5 costing", "high costing items", "expensive items", "top expensive", "high stock value", "high amount"]
 
+    full_response = None  # default response
+
+    # ----- Local Handling -----
     if any(keyword in user_input_lower for keyword in stock_count_keywords):
         full_response = f"📦 There are currently **{total_items} items** in the inventory, covering various categories such as chemicals, fabrics, and more."
 
@@ -263,7 +266,6 @@ def handle_input():
 
     elif any(keyword in user_input_lower for keyword in costing_keywords):
         costly_items = [item for item in data if item.get('stockvalue')]
-
         if costly_items:
             highest = max(costly_items, key=lambda x: float(x.get('stockvalue', 0)))
             desc = highest.get('description', 'Unknown')
@@ -289,9 +291,7 @@ def handle_input():
     elif any(keyword in user_input_lower for keyword in chemical_keywords):
         chemical_items = [item for item in data if 'chemical' in item.get('major', '').lower() or 'chemical' in item.get('description', '').lower()]
         count = len(chemical_items)
-
         full_response = f"🧪 There are {count} chemical-related items in the inventory.\n\n"
-
         if count > 0:
             full_response += "Here are some examples:\n\n"
             for idx, item in enumerate(chemical_items[:5], start=1):
@@ -308,9 +308,7 @@ def handle_input():
     elif any(keyword in user_input_lower for keyword in bleach_keywords):
         bleach_items = [item for item in data if 'bleach' in item.get('description', '').lower()]
         count = len(bleach_items)
-
         full_response = f"🧼 There are {count} bleach-related items in the inventory.\n\n"
-
         if count > 0:
             full_response += "Here are some examples:\n\n"
             for idx, item in enumerate(bleach_items[:5], start=1):
@@ -327,9 +325,7 @@ def handle_input():
     elif any(keyword in user_input_lower for keyword in fabric_keywords):
         fabric_items = [item for item in data if 'fabric' in item.get('major', '').lower() or 'fabric' in item.get('description', '').lower()]
         count = len(fabric_items)
-
         full_response = f"🧵 There are {count} fabric-related items in the inventory.\n\n"
-
         if count > 0:
             full_response += "Here are some examples:\n\n"
             for idx, item in enumerate(fabric_items[:5], start=1):
@@ -344,26 +340,12 @@ def handle_input():
             full_response += "No fabric items found."
 
     else:
-        matched_results = search_all_matching_items(user_input, data)
+        # If no local match, call Groq API as fallback
+        full_response = groq_response(user_input, {"items": data})
 
-        if matched_results:
-            full_response = f"🔍 Found {len(matched_results)} matching items, some are given below:\n\n "
-            for idx, (item, _) in enumerate(matched_results[:5], start=1):
-                desc = item.get('description', 'Unknown')
-                major = item.get('major', 'Unknown')
-                fab_type = item.get('fabtype', 'Unknown')
-                qty = item.get('qty', 'Unknown')
-                stock_value = item.get('stockvalue', 'Unknown')
-                full_response += (
-                    f"{idx}. {desc} has a stock value of {stock_value}, quantity {qty}, has {major} category, and fabric type is {fab_type}.\n"
-                )
-        else:
-            full_response = "❌ No items matched your query."
-
-    # Append response to chat history
+    # Append to chat history
     st.session_state.chat_history.append({"query": user_input, "response": full_response})
-    st.session_state.user_input = ""  # Clear input
-
+    st.session_state.user_input = ""  # clear input
 
 
 
